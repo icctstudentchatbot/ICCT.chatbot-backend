@@ -205,11 +205,6 @@ async function scrapeFacebook() {
 // API
 // ======================
 
-app.get("/announcements", async (req, res) => {
-  const data = await Announcement.find().sort({ createdAt: -1 });
-  res.json(data);
-});
-
 app.get("/announcements/search", async (req, res) => {
   const q = req.query.q || "";
 

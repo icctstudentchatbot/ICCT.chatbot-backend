@@ -5,7 +5,6 @@
   "main": "scraper.js",
   "scripts": {
     "start": "node scraper.js",
-    "postinstall": "npx puppeteer browsers install chrome",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],
@@ -13,10 +12,11 @@
   "license": "ISC",
   "description": "",
   "dependencies": {
+    "@sparticuz/chromium": "^138.0.2",
     "cors": "^2.8.5",
     "dotenv": "^17.4.2",
     "express": "^5.2.1",
     "mongoose": "^9.7.2",
-    "puppeteer": "^25.1.0"
+    "puppeteer-core": "^24.15.0"
   }
 }

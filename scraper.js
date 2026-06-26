@@ -9,6 +9,7 @@ import Announcement from "./models/announcement.js";
 dotenv.config();
 
 const app = express();
+
 app.use(cors());
 app.use(express.json());
 
@@ -21,16 +22,6 @@ mongoose
   .then(async () => {
     console.log("✅ MongoDB Atlas Connected");
     console.log("📦 Database Name:", mongoose.connection.db.databaseName);
-
-    const test = await Announcement.create({
-      title: "TEST",
-      content: "TEST CONTENT " + Date.now(),
-      category: "test",
-      hash: crypto.randomUUID(),
-      images: [],
-    });
-
-    console.log("🧪 TEST DOCUMENT SAVED:", test._id);
 
     scrapeFacebook();
     setInterval(scrapeFacebook, 10 * 60 * 1000);
@@ -55,12 +46,20 @@ function cleanText(text) {
 function categorizePost(text) {
   const lower = text.toLowerCase();
 
-  if (lower.includes("sip") || lower.includes("student internship"))
+  if (
+    lower.includes("sip") ||
+    lower.includes("student internship")
+  )
     return "internship";
 
   if (lower.includes("sog")) return "sog";
   if (lower.includes("enrollment")) return "enrollment";
-  if (lower.includes("tuition") || lower.includes("fees") || lower.includes("payment"))
+
+  if (
+    lower.includes("tuition") ||
+    lower.includes("fees") ||
+    lower.includes("payment")
+  )
     return "fees";
 
   if (
@@ -83,13 +82,12 @@ async function scrapeFacebook() {
 
   try {
     console.log("\n🔎 Checking Facebook...");
-
     console.log("MONGO STATE:", mongoose.connection.readyState);
 
     browser = await puppeteer.launch({
-  headless: "new",
-  args: ["--no-sandbox", "--disable-setuid-sandbox"],
-});
+      headless: "new",
+      args: ["--no-sandbox", "--disable-setuid-sandbox"],
+    });
 
     const page = await browser.newPage();
 
@@ -118,29 +116,31 @@ async function scrapeFacebook() {
     const posts = await page.evaluate(() => {
       const data = [];
 
-      document.querySelectorAll("div[role='article']").forEach((article) => {
-        const text = article.innerText || "";
+      document
+        .querySelectorAll("div[role='article']")
+        .forEach((article) => {
+          const text = article.innerText || "";
 
-        const images = [];
+          const images = [];
 
-        article.querySelectorAll("img").forEach((img) => {
-          const src = img?.src;
+          article.querySelectorAll("img").forEach((img) => {
+            const src = img?.src;
 
-          if (
-            src &&
-            src.startsWith("http") &&
-            !src.includes("emoji") &&
-            !src.includes("static.xx") &&
-            !src.includes("profile")
-          ) {
-            images.push(src);
+            if (
+              src &&
+              src.startsWith("http") &&
+              !src.includes("emoji") &&
+              !src.includes("static.xx") &&
+              !src.includes("profile")
+            ) {
+              images.push(src);
+            }
+          });
+
+          if (text && text.length > 30) {
+            data.push({ text, images });
           }
         });
-
-        if (text && text.length > 30) {
-          data.push({ text, images });
-        }
-      });
 
       return data;
     });
@@ -148,7 +148,7 @@ async function scrapeFacebook() {
     console.log("📄 POSTS FOUND:", posts.length);
 
     // ======================
-    // SAVE TO DB (DEBUG MODE)
+    // SAVE TO DB
     // ======================
     for (const item of posts) {
       const post = cleanText(item.text);
@@ -158,7 +158,10 @@ async function scrapeFacebook() {
         continue;
       }
 
-      const hash = crypto.createHash("md5").update(post).digest("hex");
+      const hash = crypto
+        .createHash("md5")
+        .update(post)
+        .digest("hex");
 
       console.log("\n➡️ PROCESSING POST:");
       console.log(post.substring(0, 80));
@@ -192,7 +195,6 @@ async function scrapeFacebook() {
 
     await browser.close();
     console.log("✅ SCRAPE COMPLETE\n");
-
   } catch (err) {
     console.error("❌ SCRAPER ERROR:");
     console.error(err);
@@ -205,14 +207,44 @@ async function scrapeFacebook() {
 // API
 // ======================
 
+app.get("/", (req, res) => {
+  res.send("ICCT Chatbot Backend is running");
+});
+
+app.get("/announcements", async (req, res) => {
+  try {
+    const data = await Announcement.find().sort({ _id: -1 });
+
+    res.json(data);
+  } catch (err) {
+    console.error("ANNOUNCEMENTS ERROR:", err);
+
+    res.status(500).json({
+      success: false,
+      message: err.message,
+      stack: err.stack,
+    });
+  }
+});
+
 app.get("/announcements/search", async (req, res) => {
-  const q = req.query.q || "";
+  try {
+    const q = req.query.q || "";
 
-  const data = await Announcement.find({
-    content: { $regex: q, $options: "i" },
-  }).sort({ createdAt: -1 });
+    const data = await Announcement.find({
+      content: { $regex: q, $options: "i" },
+    }).sort({ _id: -1 });
 
-  res.json(data);
+    res.json(data);
+  } catch (err) {
+    console.error("ANNOUNCEMENTS SEARCH ERROR:", err);
+
+    res.status(500).json({
+      success: false,
+      message: err.message,
+      stack: err.stack,
+    });
+  }
 });
 
 // ======================

@@ -84,14 +84,13 @@ async function scrapeFacebook() {
     console.log("\n🔎 Checking Facebook...");
     console.log("MONGO STATE:", mongoose.connection.readyState);
 
-    browser = await puppeteer.launch({
+  browser = await puppeteer.launch({
   headless: "new",
-  executablePath:
-    process.env.PUPPETEER_EXECUTABLE_PATH ||
-    "/opt/render/.cache/puppeteer/chrome/linux-149.0.7827.22/chrome-linux64/chrome",
-  args: ["--no-sandbox", "--disable-setuid-sandbox"],
+  args: [
+    "--no-sandbox",
+    "--disable-setuid-sandbox",
+  ],
 });
-
     const page = await browser.newPage();
 
     await page.setUserAgent(

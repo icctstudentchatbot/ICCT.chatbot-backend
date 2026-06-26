@@ -87,10 +87,9 @@ async function scrapeFacebook() {
     console.log("MONGO STATE:", mongoose.connection.readyState);
 
     browser = await puppeteer.launch({
-      headless: false,
-      defaultViewport: null,
-      args: ["--no-sandbox", "--disable-setuid-sandbox"],
-    });
+  headless: "new",
+  args: ["--no-sandbox", "--disable-setuid-sandbox"],
+});
 
     const page = await browser.newPage();
 
@@ -225,6 +224,8 @@ app.get("/announcements/search", async (req, res) => {
 // SERVER
 // ======================
 
-app.listen(3001, () => {
-  console.log("🚀 SERVER RUNNING ON PORT 3001");
+const PORT = process.env.PORT || 3001;
+
+app.listen(PORT, () => {
+  console.log(`🚀 SERVER RUNNING ON PORT ${PORT}`);
 });

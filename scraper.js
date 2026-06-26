@@ -1,5 +1,6 @@
 import express from "express";
-import puppeteer from "puppeteer";
+import puppeteer from "puppeteer-core";
+import chromium from "@sparticuz/chromium";
 import cors from "cors";
 import mongoose from "mongoose";
 import dotenv from "dotenv";
@@ -85,11 +86,9 @@ async function scrapeFacebook() {
     console.log("MONGO STATE:", mongoose.connection.readyState);
 
   browser = await puppeteer.launch({
-  headless: "new",
-  args: [
-    "--no-sandbox",
-    "--disable-setuid-sandbox",
-  ],
+  args: chromium.args,
+  executablePath: await chromium.executablePath(),
+  headless: chromium.headless,
 });
     const page = await browser.newPage();
 
